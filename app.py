@@ -33,18 +33,19 @@ def add_user_to_g():
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
-        g.csrf_form = CsrfForm()
 
     else:
         g.user = None
 
     print("g.user is:", g.user)
 
+
 @app.before_request
 def add_form_to_g():
     """Add Csrf form to Flask global."""
 
     g.csrf_form = CsrfForm()
+
 
 def do_login(user):
     """Log in user."""
@@ -59,8 +60,6 @@ def do_logout():
         del session[CURR_USER_KEY]
 
 
-
-
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     """Handle user signup.
@@ -73,7 +72,10 @@ def signup():
     and re-present form.
     """
 
-    do_logout()
+    if g.csrf_form.validate_on_submit():
+        do_logout()
+    else:
+        flash("WE KNOW WHAT YOU'RE TRYING TO DO!", "danger")
 
     form = UserAddForm()
 
@@ -253,10 +255,14 @@ def delete_user():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    do_logout()
+    form = g.csrf_form
 
-    db.session.delete(g.user)
-    db.session.commit()
+    if form.validate_on_submit():
+        do_logout()
+        db.session.delete(g.user)
+        db.session.commit()
+    else:
+        flash("WE'RE ON TO YOU!", "danger")
 
     return redirect("/signup")
 

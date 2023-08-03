@@ -223,7 +223,7 @@ def start_following(follow_id):
 def stop_following(follow_id):
     """Have currently-logged-in-user stop following this user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
 
     if not g.user:
@@ -239,9 +239,15 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
+    """Handle updating user profile. Save updated user to DB.
+    Redirect to home page.
 
-    # IMPLEMENT THIS
+    If form not valid, re-render page.
+
+    If there already is a user with that username: flash message
+    and re-present form.
+    """
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -256,19 +262,28 @@ def profile():
         bio = form.bio.data
 
 
-        if User.authenticate(username, form.password.data):
-            g.user.username = username or g.user.username
-            g.user.email = email or g.user.email
-            g.user.image_url = image_url or g.user.image_url
-            g.user.header_image_url = header_image_url or g.user.header_image_url
-            g.user.bio = bio or g.user.bio
+        if User.authenticate(g.user.username, form.password.data):
+
+            try:
+                g.user.username = username or g.user.username
+                g.user.email = email or g.user.email
+                g.user.image_url = image_url or g.user.image_url
+                g.user.header_image_url = header_image_url or g.user.header_image_url
+                g.user.bio = bio or g.user.bio
+
+                db.session.commit()
+
+            except IntegrityError:
+
+                flash("Username has been taken.", "danger")
+                return render_template("/users/edit.html", form=form)
+
         else:
-            flash("Username been taken.", "danger")
-            return render_template("edit.html", form=form)
+            flash("Wrong password")
 
+        return redirect(f"/users/{g.user.id}")
 
-
-
+    return render_template("/users/edit.html", form=form)
 
 
 

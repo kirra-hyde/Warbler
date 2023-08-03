@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, UserEditForm
 from models import db, connect_db, User, Message
@@ -72,8 +73,6 @@ def signup():
 
     if g.csrf_form.validate_on_submit():
         do_logout()
-    else:
-        flash("WE KNOW WHAT YOU'RE TRYING TO DO!", "danger")
 
     form = UserAddForm()
 
@@ -95,8 +94,8 @@ def signup():
 
         return redirect("/")
 
-    else:
-        return render_template('users/signup.html', form=form)
+
+    return render_template('users/signup.html', form=form)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -118,6 +117,7 @@ def login():
 
         flash("Invalid credentials.", 'danger')
 
+
     return render_template('users/login.html', form=form)
 
 
@@ -132,9 +132,9 @@ def logout():
         do_logout()
         flash("You have been successfully logged out!")
 
-    print("do we reach here")
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
+    else:
+        raise Unauthorized()
+
     return redirect("/")
 
 
@@ -159,6 +159,8 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
+    form = g.csrf_form
+
     return render_template('users/index.html', users=users)
 
 
@@ -171,6 +173,7 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
+    form = g.csrf_form
 
     return render_template('users/show.html', user=user)
 
@@ -184,6 +187,8 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
+    form = g.csrf_form
+
     return render_template('users/following.html', user=user)
 
 
@@ -196,6 +201,8 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
+    form = g.csrf_form
+
     return render_template('users/followers.html', user=user)
 
 
@@ -205,16 +212,18 @@ def start_following(follow_id):
 
     Redirect to following page for the current for the current user.
     """
-    ##TODO: CsrfForm protection
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
+    form = g.csrf_form
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/following")
+
 
 
 @app.post('/users/stop-following/<int:follow_id>')
@@ -227,6 +236,9 @@ def stop_following(follow_id):
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
+
+    form = g.csrf_form
+
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.remove(followed_user)
@@ -250,9 +262,10 @@ def profile():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    form = UserEditForm()
+    form = UserEditForm(obj=g.user)
 
     if form.validate_on_submit():
+
         username = form.username.data
         email = form.email.data
         image_url = form.image_url.data
@@ -280,6 +293,8 @@ def profile():
             flash("Wrong password")
 
         return redirect(f"/users/{g.user.id}")
+    # else:
+    #     raise Unauthorized()  #TODO: WHY?
 
     return render_template("/users/edit.html", form=form)
 
@@ -298,12 +313,9 @@ def delete_user():
 
     form = g.csrf_form
 
-    if form.validate_on_submit():
-        do_logout()
-        db.session.delete(g.user)
-        db.session.commit()
-    else:
-        flash("WE'RE ON TO YOU!", "danger")
+    do_logout()
+    db.session.delete(g.user)
+    db.session.commit()
 
     return redirect("/signup")
 
@@ -343,6 +355,8 @@ def show_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
+    form = g.csrf_form
+
     return render_template('messages/show.html', message=msg)
 
 
@@ -358,11 +372,14 @@ def delete_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    form = g.csrf_form
+
     msg = Message.query.get_or_404(message_id)
     db.session.delete(msg)
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
+
 
 
 ##############################################################################

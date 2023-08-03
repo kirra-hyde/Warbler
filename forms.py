@@ -45,18 +45,19 @@ class LoginForm(FlaskForm):
         'Password',
         validators=[InputRequired(), Length(min=6, max=50)],
     )
-## switch to required from optional
+
+
 class UserEditForm(FlaskForm):
     """Form to edit user profile."""
 
     username = StringField(
         'Username',
-        validators=[Optional(), Length(max=30)],
+        validators=[InputRequired(), Length(max=30)],
     )
 
     email = StringField(
         'E-mail',
-        validators=[Optional(), Email(), Length(max=50)],
+        validators=[InputRequired(), Email(), Length(max=50)],
     )
 
     image_url = StringField(

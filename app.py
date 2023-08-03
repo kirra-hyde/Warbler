@@ -37,8 +37,6 @@ def add_user_to_g():
     else:
         g.user = None
 
-    print("g.user is:", g.user)
-
 
 @app.before_request
 def add_form_to_g():
@@ -380,14 +378,15 @@ def homepage():
     """
 
     if g.user:
+        user_ids = [user.id for user in g.user.following]
+        user_ids.append(g.user.id)
+        print (user_ids)
+
         messages = (Message
                     .query
+                    .filter(Message.user_id.in_(user_ids))
                     .order_by(Message.timestamp.desc())
-                    .filter(Message.user == g.user) or (Message.user in g.user.following)
                     .limit(100))
-
-        print("following", g.user.following)
-        print("messages.user", Message.user)
 
         return render_template('home.html', messages=messages)
 

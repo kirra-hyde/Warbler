@@ -46,5 +46,39 @@ class LoginForm(FlaskForm):
         validators=[InputRequired(), Length(min=6, max=50)],
     )
 
+class UserEditForm(FlaskForm):
+    """Edit form."""
+
+    username = StringField(
+        'Username',
+        validators=[InputRequired(), Length(max=30)],
+    )
+
+    email = StringField(
+        'E-mail',
+        validators=[InputRequired(), Email(), Length(max=50)],
+    )
+
+    image_url = StringField(
+        '(Optional) Image URL',
+        validators=[Optional(), URL(), Length(max=255)]
+    )
+
+    header_image_url = StringField(
+        '(Optional) Image URL',
+        validators=[Optional(), URL(), Length(max=255)]
+    )
+
+    bio = TextAreaField(
+        'Bio',
+        validators=[Optional(), Length(min=10, max=500)]
+    )
+
+    password = PasswordField(
+        'Password',
+        validators=[InputRequired(), Length(min=6, max=50)],
+    )
+
+
 class CsrfForm(FlaskForm):
     """For csrf protection"""

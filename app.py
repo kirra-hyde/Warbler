@@ -205,7 +205,7 @@ def start_following(follow_id):
 
     Redirect to following page for the current for the current user.
     """
-
+    ##TODO: CsrfForm protection
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")

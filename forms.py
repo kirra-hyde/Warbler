@@ -45,7 +45,7 @@ class LoginForm(FlaskForm):
         'Password',
         validators=[InputRequired(), Length(min=6, max=50)],
     )
-
+## switch to required from optional
 class UserEditForm(FlaskForm):
     """Form to edit user profile."""
 

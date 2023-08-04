@@ -74,6 +74,7 @@ def signup():
     if g.csrf_form.validate_on_submit():
         do_logout()
 
+
     form = UserAddForm()
 
     if form.validate_on_submit():
@@ -159,8 +160,6 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    form = g.csrf_form
-
     return render_template('users/index.html', users=users)
 
 
@@ -173,7 +172,6 @@ def show_user(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    form = g.csrf_form
 
     return render_template('users/show.html', user=user)
 
@@ -187,7 +185,6 @@ def show_following(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    form = g.csrf_form
 
     return render_template('users/following.html', user=user)
 
@@ -201,7 +198,6 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    form = g.csrf_form
 
     return render_template('users/followers.html', user=user)
 
@@ -218,9 +214,14 @@ def start_following(follow_id):
 
     form = g.csrf_form
 
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.append(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.append(followed_user)
+        db.session.commit()
+
+    else:
+        raise Unauthorized()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -239,10 +240,12 @@ def stop_following(follow_id):
 
     form = g.csrf_form
 
-
-    followed_user = User.query.get_or_404(follow_id)
-    g.user.following.remove(followed_user)
-    db.session.commit()
+    if form.validate_on_submit():
+        followed_user = User.query.get_or_404(follow_id)
+        g.user.following.remove(followed_user)
+        db.session.commit()
+    else:
+        raise Unauthorized()
 
     return redirect(f"/users/{g.user.id}/following")
 
@@ -278,9 +281,9 @@ def profile():
             try:
                 g.user.username = username or g.user.username
                 g.user.email = email or g.user.email
-                g.user.image_url = image_url or g.user.image_url
+                g.user.image_url = image_url or g.user.image_url  #TODO: Make deletable
                 g.user.header_image_url = header_image_url or g.user.header_image_url
-                g.user.bio = bio or g.user.bio
+                g.user.bio = bio
 
                 db.session.commit()
 
@@ -291,10 +294,8 @@ def profile():
 
         else:
             flash("Wrong password")
+            return redirect(f"/users/{g.user.id}")  #TODO: to 289
 
-        return redirect(f"/users/{g.user.id}")
-    # else:
-    #     raise Unauthorized()  #TODO: WHY?
 
     return render_template("/users/edit.html", form=form)
 
@@ -313,9 +314,13 @@ def delete_user():
 
     form = g.csrf_form
 
-    do_logout()
-    db.session.delete(g.user)
-    db.session.commit()
+    if form.validate_on_submit():
+        do_logout()
+        db.session.delete(g.user)
+        db.session.commit()
+
+    else:
+        raise Unauthorized()
 
     return redirect("/signup")
 
@@ -355,7 +360,6 @@ def show_message(message_id):
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    form = g.csrf_form
 
     return render_template('messages/show.html', message=msg)
 
@@ -367,6 +371,7 @@ def delete_message(message_id):
     Check that this message was written by the current user.
     Redirect to user page on success.
     """
+    #TODO: Add authorization
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -374,9 +379,13 @@ def delete_message(message_id):
 
     form = g.csrf_form
 
-    msg = Message.query.get_or_404(message_id)
-    db.session.delete(msg)
-    db.session.commit()
+    if form.validate_on_submit():
+        msg = Message.query.get_or_404(message_id)
+        db.session.delete(msg)
+        db.session.commit()
+
+    else:
+        raise Unauthorized()
 
     return redirect(f"/users/{g.user.id}")
 
@@ -403,7 +412,9 @@ def homepage():
                     .query
                     .filter(Message.user_id.in_(user_ids))
                     .order_by(Message.timestamp.desc())
-                    .limit(100))
+                    .limit(100)
+                    .all()
+                    )
 
         return render_template('home.html', messages=messages)
 

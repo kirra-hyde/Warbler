@@ -72,9 +72,7 @@ def signup():
     and re-present form.
     """
 
-    if g.csrf_form.validate_on_submit():
-        do_logout()
-
+    do_logout()
 
     form = UserAddForm()
 
@@ -408,18 +406,19 @@ def like_message(message_id):
     if form.validate_on_submit():
         msg = Message.query.get_or_404(message_id)
         try:
-            Like.like_message(follower=g.user,followee=msg.user, message=msg)
+            like = Like.like_message(follower=g.user,followee=msg.user, message=msg)
             db.session.commit()
 
         except IntegrityError:
             flash("You can only like messages for people you are following.", "danger")
-            return render_template("", form=form)
+            return render_template("messages.show.html", form=form)  #TODO: Find the right error and check html file
 
+        return redirect("/")
 
     else:
         raise Unauthorized()
 
-    return redirect(f"/users/{g.user.id}")
+
 
 
 ##############################################################################

@@ -208,14 +208,19 @@ class Like(db.Model):
 
     likee_id = db.Column (
         db.Integer,
-        db.ForeignKey('users.id', ondelete='CASCADE')
+        db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
 
     @classmethod
     def like_message(cls, follower, followee, message):
-        if follower.is_following(followee) and message.user == followee.user:
-            create like instance.
+        if follower.is_following(followee) and message.user == followee:
+            like = Like(liked_message_id = message.id,
+                        liker_id = follower.id,
+                        likee_id = followee.id)
+
+            db.session.add(like)
+            return like
 
 
 

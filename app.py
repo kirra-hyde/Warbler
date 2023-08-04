@@ -7,7 +7,8 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, UserEditForm
-from models import db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
+from models import (db, connect_db, User, Message, Like,
+DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL)
 
 load_dotenv()
 
@@ -390,6 +391,35 @@ def delete_message(message_id):
 
     return redirect(f"/users/{g.user.id}")
 
+
+@app.post('/messages/<int:message_id>/like')
+def like_message(message_id):
+    """Like a message.
+
+    Redirect to the homepage on success.
+    """
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    form = g.csrf_form
+
+    if form.validate_on_submit():
+        msg = Message.query.get_or_404(message_id)
+        try:
+            Like.like_message(follower=g.user,followee=msg.user, message=msg)
+            db.session.commit()
+
+        except IntegrityError:
+            flash("You can only like messages for people you are following.", "danger")
+            return render_template("", form=form)
+
+
+    else:
+        raise Unauthorized()
+
+    return redirect(f"/users/{g.user.id}")
 
 
 ##############################################################################

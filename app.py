@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
 from forms import UserAddForm, LoginForm, MessageForm, CsrfForm, UserEditForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, DEFAULT_IMAGE_URL, DEFAULT_HEADER_IMAGE_URL
 
 load_dotenv()
 
@@ -127,7 +127,6 @@ def logout():
     """Handle logout of user and redirect to homepage."""
 
     form = g.csrf_form
-    print("form", form)
 
     if form.validate_on_submit():
         do_logout()
@@ -281,11 +280,12 @@ def profile():
             try:
                 g.user.username = username or g.user.username
                 g.user.email = email or g.user.email
-                g.user.image_url = image_url or g.user.image_url  #TODO: Make deletable
-                g.user.header_image_url = header_image_url or g.user.header_image_url
+                g.user.image_url = image_url or DEFAULT_IMAGE_URL
+                g.user.header_image_url = header_image_url or DEFAULT_HEADER_IMAGE_URL
                 g.user.bio = bio
 
                 db.session.commit()
+                return redirect(f"/users/{g.user.id}")
 
             except IntegrityError:
 
@@ -294,8 +294,6 @@ def profile():
 
         else:
             flash("Wrong password")
-            return redirect(f"/users/{g.user.id}")  #TODO: to 289
-
 
     return render_template("/users/edit.html", form=form)
 

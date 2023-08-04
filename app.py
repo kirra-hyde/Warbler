@@ -369,7 +369,6 @@ def delete_message(message_id):
     Check that this message was written by the current user.
     Redirect to user page on success.
     """
-    #TODO: Add authorization
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -379,8 +378,12 @@ def delete_message(message_id):
 
     if form.validate_on_submit():
         msg = Message.query.get_or_404(message_id)
-        db.session.delete(msg)
-        db.session.commit()
+        if msg.user == g.user:
+            db.session.delete(msg)
+            db.session.commit()
+
+        else:
+            flash ("You can only delete your own messages.")
 
     else:
         raise Unauthorized()

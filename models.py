@@ -100,6 +100,7 @@ class User(db.Model):
     def __repr__(self):
         return f"<User #{self.id}: {self.username}, {self.email}>"
 
+
     @classmethod
     def signup(cls, username, email, password, image_url=DEFAULT_IMAGE_URL):
         """Sign up user.
@@ -148,7 +149,7 @@ class User(db.Model):
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
-        """Is this user following `other_use`?"""
+        """Is this user following `other_user`?"""
 
         found_user_list = [
             user for user in self.following if user == other_user]
@@ -181,6 +182,45 @@ class Message(db.Model):
         db.ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False,
     )
+
+
+class Like(db.Model):
+    """Liked warbles"""
+
+    __tablename__ = 'likes'
+
+    id = db.Column(
+        db.Integer,
+        primary_key=True
+    )
+
+    liked_message_id = db.Column(
+        db.Integer,
+        db.ForeignKey('messages.id', ondelete='CASCADE'),
+        nullable=False
+    )
+
+    liker_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False
+    )
+
+    likee_id = db.Column (
+        db.Integer,
+        db.ForeignKey('users.id', ondelete='CASCADE')
+        nullable=False
+    )
+
+    @classmethod
+    def like_message(cls, follower, followee, message):
+        if follower.is_following(followee) and message.user == followee.user:
+            create like instance.
+
+
+
+
+
 
 
 def connect_db(app):

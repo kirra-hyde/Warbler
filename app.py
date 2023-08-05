@@ -405,13 +405,12 @@ def like_message(message_id):
 
     if form.validate_on_submit():
         msg = Message.query.get_or_404(message_id)
-        try:
-            like = Like.like_message(follower=g.user,followee=msg.user, message=msg)
-            db.session.commit()
 
-        except IntegrityError:
+        like = Like.like_message(follower=g.user,followee=msg.user,message=msg)
+        if like:
+            db.session.commit()
+        else:
             flash("You can only like messages for people you are following.", "danger")
-            return render_template("messages.show.html", form=form)  #TODO: Find the right error and check html file
 
         return redirect("/")
 

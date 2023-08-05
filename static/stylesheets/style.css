@@ -8,10 +8,6 @@ body.error-404 {
   background-color: #1da1f2;
 }
 
-button {
-  z-index: 5;
-}
-
 .form-control {
   margin-bottom: 20px;
 }
@@ -22,6 +18,11 @@ button {
 
 .btn:hover {
   cursor: pointer;
+}
+
+button.front {
+  position: relative;
+  z-index: 2;
 }
 
 

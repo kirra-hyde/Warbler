@@ -55,9 +55,9 @@
             <div class="message-area">
               <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
               <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-              <form method="POST" action="/messages/{{msg.id}}/like">
+              <form method="POST" action="/messages/{{ msg.id }}/like">
                 {{ g.csrf_form.hidden_tag() }}
-                <button><i class="bi bi-star-fill"></i></button>
+                <button class="front"><i class="bi bi-star-fill"></i></button>
               </form>
               <p>{{ msg.text }}</p>
             </div>

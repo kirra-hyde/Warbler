@@ -155,6 +155,15 @@ class User(db.Model):
             user for user in self.following if user == other_user]
         return len(found_user_list) == 1
 
+    def is_liking(self, message):
+        likes = Like.query.filter(Like.liked_message_id == message.id,
+                Like.liker_id == self.id).all()
+        if likes:
+            return True
+        else:
+            return False
+
+
 
 class Message(db.Model):
     """An individual message ("warble")."""
@@ -213,17 +222,20 @@ class Like(db.Model):
     )
 
     @classmethod
-    def like_message(cls, follower, followee, message):
-        if follower.is_following(followee) and message.user == followee:
-            like = Like(liked_message_id = message.id,
-                        liker_id = follower.id,
-                        likee_id = followee.id)
+    def like_and_unlike_message(cls, follower, followee, message):
+        if follower.is_following(followee):
+            if not follower.is_liking(message):
+                like = Like(liked_message_id = message.id,
+                            liker_id = follower.id,
+                            likee_id = followee.id)
 
-            db.session.add(like)
-            return like
-
-
-
+                db.session.add(like)
+                return like
+            else:
+                to_delete = Like.query.filter(Like.liked_message_id == message.id,
+                            Like.liker_id == follower.id).one()
+                db.session.delete(to_delete)
+                return 1
 
 
 

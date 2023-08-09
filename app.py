@@ -391,7 +391,7 @@ def delete_message(message_id):
 
 
 @app.post('/messages/<int:message_id>/like')
-def like_message(message_id):
+def like_unlike_message(message_id):
     """Like a message.
 
     Redirect to the homepage on success.
@@ -406,7 +406,7 @@ def like_message(message_id):
     if form.validate_on_submit():
         msg = Message.query.get_or_404(message_id)
 
-        like = Like.like_message(follower=g.user,followee=msg.user,message=msg)
+        like = Like.like_and_unlike_message(follower=g.user,followee=msg.user,message=msg)
         if like:
             db.session.commit()
         else:

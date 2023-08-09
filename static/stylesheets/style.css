@@ -20,7 +20,7 @@ body.error-404 {
   cursor: pointer;
 }
 
-button.front {
+.front {
   position: relative;
   z-index: 5;
 }

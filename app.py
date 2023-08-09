@@ -409,6 +409,7 @@ def like_unlike_message(message_id):
         like = Like.like_and_unlike_message(follower=g.user,followee=msg.user,message=msg)
         if like:
             db.session.commit()
+            return redirect("/")
         else:
             flash("You can only like messages for people you are following.", "danger")
 

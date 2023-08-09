@@ -22,7 +22,7 @@ body.error-404 {
 
 button.front {
   position: relative;
-  z-index: 2;
+  z-index: 5;
 }
 
 
